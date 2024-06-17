@@ -1,10 +1,12 @@
 package np.com.softwarica.week8
 
+import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.MenuItem
 import android.view.View
 import android.widget.Toast
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import np.com.softwarica.week8.constants.Constants
 import np.com.softwarica.week8.databinding.ActivityPostBinding
 import com.google.firebase.Firebase
@@ -17,8 +19,12 @@ class PostActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityPostBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        findViewById<FloatingActionButton>(R.id.fab).setOnClickListener {
+            deletePost();
+        };  findViewById<FloatingActionButton>(R.id.edit).setOnClickListener {
+            editPost();
+        }
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -51,6 +57,25 @@ class PostActivity : AppCompatActivity() {
                     showError()
                 }
             }
+    }
+    private fun deletePost() {
+        val id = intent.getStringExtra(Constants.PARAM_ID) ?: return
+        binding.progress.visibility = View.VISIBLE
+        val documentRef = Firebase.firestore.collection(Constants.POST).document(id).delete()
+            .addOnSuccessListener {
+                Toast.makeText(this, "Post deleted successfully", Toast.LENGTH_SHORT).show()
+                finish()
+            }
+            .addOnFailureListener { e ->
+                binding.progress.visibility = View.GONE;
+                Toast.makeText(this, e.message, Toast.LENGTH_SHORT).show()
+            }
+    }
+    private fun editPost() {
+        val id = intent.getStringExtra(Constants.PARAM_ID) ?: return
+        val intent = Intent(this, CreatePostActivity::class.java)
+        intent.putExtra(Constants.PARAM_ID, id)
+        startActivity(intent)
     }
 
     private fun showError() {
